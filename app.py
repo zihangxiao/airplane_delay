@@ -162,6 +162,7 @@ if not selected_route.empty:
 
     # Create a DataFrame from the dictionary
     df = pd.DataFrame(data)
+    df = df.reset_index(drop=True)
 
     with open('xgb_classifier.pkl', 'rb') as file:
         xgb_classifier = pickle.load(file)
