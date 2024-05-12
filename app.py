@@ -31,8 +31,6 @@ airline_options = list(airline_mapping.keys())
 selected_airline = st.selectbox("Select Airline", airline_options)
 airline_code = airline_mapping[selected_airline]
 
-import pandas as pd
-
 # Load the merged airport data
 merged_data = pd.read_csv('./merged_airport_data.csv')
 
@@ -164,7 +162,7 @@ if not selected_route.empty:
     df = pd.DataFrame(data)
     df = df.reset_index(drop=True)
     print(df.shape)
-    print(df.iloc[0])
+    st.write(df.iloc[:, 0])
     with open('xgb_classifier.pkl', 'rb') as file:
         xgb_classifier = pickle.load(file)
         
