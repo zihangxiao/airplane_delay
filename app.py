@@ -34,7 +34,7 @@ airline_code = airline_mapping[selected_airline]
 import pandas as pd
 
 # Load the merged airport data
-merged_data = pd.read_csv('"./merged_airport_data.csv')
+merged_data = pd.read_csv('./merged_airport_data.csv')
 
 # Origin airport selection
 origin = st.selectbox("Select Origin Airport", merged_data['Origin Airport Code'].unique())
