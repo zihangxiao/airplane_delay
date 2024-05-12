@@ -168,6 +168,8 @@ if not selected_route.empty:
         
 
     if st.button("Predict"):
+        st.dataframe(df)
+
         delay_probability = xgb_classifier.predict_proba(df)[:, 1][0]
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
 
