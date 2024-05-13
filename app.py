@@ -170,6 +170,35 @@ if not selected_route.empty:
         delay_probability = xgb_classifier.predict_proba(df)[:, 1][0]
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
 
+        if delay_probability >= 0.5:
+            if st.button("View Reasons"):
+                st.write("Reasons:")
+
+                # Create a bar plot for the weather data
+                fig, ax = plt.subplots(figsize=(10, 6))
+                weather_data = [
+                    ('Fly Distance', fly_distance),
+                    ('Origin Wind Speed', origin_wind_speed),
+                    ('Origin Precipitation', origin_precip),
+                    ('Origin Snowfall', origin_snowfall),
+                    ('Destination Wind Speed', dest_wind_speed),
+                    ('Destination Precipitation', dest_precip),
+                    ('Destination Snowfall', dest_snowfall)
+                ]
+                x = [item[0] for item in weather_data]
+                y = [item[1] for item in weather_data]
+                ax.bar(x, y)
+                ax.set_xlabel('Weather Condition')
+                ax.set_ylabel('Value')
+                ax.set_title('Weather Conditions Affecting Flight Delay')
+                st.pyplot(fig)
+
+                # Display the weather data in a table
+                weather_df = pd.DataFrame(weather_data, columns=['Condition', 'Value'])
+                st.write(weather_df)
+        else:
+            st.write("Your flight is not likely to be delayed.")
+
 else:
     st.write("This Route Doesn't Exist. Please Enter Again :(")
 
