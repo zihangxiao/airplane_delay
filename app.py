@@ -4,7 +4,7 @@ import requests
 import pickle
 import xgboost as xgb
 import datetime
-
+import matplotlib.pyplot as plt
 # Set page title
 st.set_page_config(page_title="Flight Delay Prediction")
 
@@ -171,6 +171,7 @@ if not selected_route.empty:
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
 
         if delay_probability >= 0.5:
+            st.write("Your flight is likely to be delayed.")
             if st.button("View Reasons"):
                 st.write("Reasons:")
 
