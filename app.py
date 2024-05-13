@@ -101,7 +101,6 @@ if not selected_route.empty:
     dest_weather_data = requests.get(dest_weather_url).json()
     
     # Extract relevant weather information for origin airport
-# Extract relevant weather information for origin airport
     origin_precip = get_weather_value(origin_weather_data['properties']['quantitativePrecipitation'], selected_date, departure_time)
     origin_wind_speed = get_weather_value(origin_weather_data['properties']['windSpeed'], selected_date, departure_time)
     origin_snowfall = get_weather_value(origin_weather_data['properties']['snowfallAmount'], selected_date, departure_time)
@@ -112,8 +111,12 @@ if not selected_route.empty:
     dest_snowfall = get_weather_value(dest_weather_data['properties']['snowfallAmount'], selected_date, departure_time)
 
     airline_columns = [f"Airline_{code}" for code in airline_mapping.values()]
-    origin_columns = [f"Origin_{code}" for code in merged_data['Origin Airport Code'].unique()]
-    dest_columns = [f"Dest_{code}" for code in merged_data['Dest Airport Code'].unique()]
+    origin_codes = sorted(merged_data['Origin Airport Code'].unique())
+    dest_codes = sorted(merged_data['Dest Airport Code'].unique())
+
+    # Create lists of column names in the desired order
+    origin_columns = [f"Origin_{code}" for code in origin_codes]
+    dest_columns = [f"Dest_{code}" for code in dest_codes]
     month_columns = [f"Month_{i}" for i in range(1, 13)]
     day_of_week_columns = [f"DayOfWeek_{i}" for i in range(1, 8)]
     hour_columns = [f"Hour_{i}" for i in range(24)]
@@ -162,11 +165,12 @@ if not selected_route.empty:
 
     # Create a DataFrame from the dictionary
     df = pd.DataFrame(data)
-
+    df = df.drop(columns=['Hour_3'])
+    #drop it since no plane will dep at this time
     with open('xgb_classifier.pkl', 'rb') as file:
         xgb_classifier = pickle.load(file)
         
-
+    
     if st.button("Predict"):
         delay_probability = xgb_classifier.predict_proba(df)[:, 1][0]
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
