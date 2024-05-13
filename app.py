@@ -26,9 +26,9 @@ selected_airline = st.selectbox("Select Airline", airline_options)
 airline_code = airline_mapping[selected_airline]
 
 # Load the merged airport data
-merged_data = pd.read_csv('./merged_airport_data.csv')
+#merged_data = pd.read_csv('./merged_airport_data.csv')
 
-#merged_data = pd.read_csv('C:/Users/51325/Documents/projects/project_airplane/code/merged_airport_data.csv')
+merged_data = pd.read_csv('C:/Users/51325/Documents/projects/project_airplane/code/merged_airport_data.csv')
 # Origin airport selection
 origin = st.selectbox("Select Origin Airport", merged_data['Origin Airport Code'].unique())
 
@@ -183,24 +183,15 @@ if not selected_route.empty:
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
 
         if delay_probability >= 0.5:
-            st.write("Your flight is likely to be delayed.")
-            if st.button("View Reasons"):
-                st.write("Reasons:")
-                weather_data = [
-                    ('Fly Distance', fly_distance),
-                    ('Origin Wind Speed', origin_wind_speed),
-                    ('Origin Precipitation', origin_precip),
-                    ('Origin Snowfall', origin_snowfall),
-                    ('Destination Wind Speed', dest_wind_speed),
-                    ('Destination Precipitation', dest_precip),
-                    ('Destination Snowfall', dest_snowfall)
-                ]
-                weather_df = pd.DataFrame(weather_data, columns=['Condition', 'Value'])
-                st.write("delayyy hahahha")
-                st.dataframe(weather_df)
-        else:
-            st.write("Your flight is not likely to be delayed.")
-
+            st.write(f"Weather")
+            weather_data = [
+                (f'{origin} Wind Speed', origin_wind_speed),
+                (f'{origin} Precipitation', origin_precip),
+                (f'{destination} Wind Speed', dest_wind_speed),
+                (f'{destination} Precipitation', dest_precip),
+            ]
+            weather_df = pd.DataFrame(weather_data, columns=['Condition', 'Value'])
+            st.dataframe(weather_df)
 
 else:
     st.write("This Route Doesn't Exist. Please Enter Again :(")
