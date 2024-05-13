@@ -4,7 +4,6 @@ import requests
 import pickle
 import xgboost as xgb
 import datetime
-import matplotlib.pyplot as plt
 # Set page title
 st.set_page_config(page_title="Flight Delay Prediction")
 
@@ -175,8 +174,6 @@ if not selected_route.empty:
             if st.button("View Reasons"):
                 st.write("Reasons:")
 
-                # Create a bar plot for the weather data
-                fig, ax = plt.subplots(figsize=(10, 6))
                 weather_data = [
                     ('Fly Distance', fly_distance),
                     ('Origin Wind Speed', origin_wind_speed),
@@ -186,14 +183,6 @@ if not selected_route.empty:
                     ('Destination Precipitation', dest_precip),
                     ('Destination Snowfall', dest_snowfall)
                 ]
-                x = [item[0] for item in weather_data]
-                y = [item[1] for item in weather_data]
-                ax.bar(x, y)
-                ax.set_xlabel('Weather Condition')
-                ax.set_ylabel('Value')
-                ax.set_title('Weather Conditions Affecting Flight Delay')
-                st.pyplot(fig)
-
                 # Display the weather data in a table
                 weather_df = pd.DataFrame(weather_data, columns=['Condition', 'Value'])
                 st.write(weather_df)
