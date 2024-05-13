@@ -45,12 +45,12 @@ destination = st.selectbox("Select Destination Airport", merged_data['Dest Airpo
 # Retrieve airport information based on user selection
 selected_route = merged_data[(merged_data['Origin Airport Code'] == origin) & (merged_data['Dest Airport Code'] == destination)]
 
-month = st.selectbox("Select Month", ["January", "February", "March", "April", "May", "June",
-                                       "July", "August", "September", "October", "November", "December"])
-
 selected_date = st.date_input("Select Date", min_value=datetime.date.today(), max_value=datetime.date.today() + datetime.timedelta(days=7))
 
 day_of_week = selected_date.strftime("%A")
+
+month = selected_date.strftime("%B")
+
 
 # Departure time selection
 departure_time = st.selectbox("Select Departure Time", ["00:00", "01:00", "02:00", "04:00", "05:00", "06:00",
