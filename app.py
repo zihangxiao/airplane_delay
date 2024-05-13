@@ -25,11 +25,10 @@ airline_options = list(airline_mapping.keys())
 selected_airline = st.selectbox("Select Airline", airline_options)
 airline_code = airline_mapping[selected_airline]
 
-import pandas as pd
-
 # Load the merged airport data
 merged_data = pd.read_csv('./merged_airport_data.csv')
 
+#merged_data = pd.read_csv('C:/Users/51325/Documents/projects/project_airplane/code/merged_airport_data.csv')
 # Origin airport selection
 origin = st.selectbox("Select Origin Airport", merged_data['Origin Airport Code'].unique())
 
@@ -70,103 +69,117 @@ def get_weather_value(weather_data, selected_date, departure_time):
     return closest_value
 
 
-if not selected_route.empty:
-    origin_lat = int(selected_route['Origin Latitude'].values[0])
-    origin_lon = int(selected_route['Origin Longitude'].values[0])
-    dest_lat = int(selected_route['Dest Latitude'].values[0])
-    dest_lon = int(selected_route['Dest Longitude'].values[0])
-    fly_distance = int(selected_route['Fly Distance'].values[0])
-    
-    origin_grid_url = f"https://api.weather.gov/points/{origin_lat},{origin_lon}"
-    dest_grid_url = f"https://api.weather.gov/points/{dest_lat},{dest_lon}"
-    
-    origin_grid_data = requests.get(origin_grid_url).json()
-    dest_grid_data = requests.get(dest_grid_url).json()
-    
-    origin_grid_x = origin_grid_data['properties']['gridX']
-    origin_grid_y = origin_grid_data['properties']['gridY']
-    dest_grid_x = dest_grid_data['properties']['gridX']
-    dest_grid_y = dest_grid_data['properties']['gridY']
-    
-    origin_weather_url = f"https://api.weather.gov/gridpoints/{origin_grid_data['properties']['gridId']}/{origin_grid_x},{origin_grid_y}"
-    dest_weather_url = f"https://api.weather.gov/gridpoints/{dest_grid_data['properties']['gridId']}/{dest_grid_x},{dest_grid_y}"
-    
-    origin_weather_data = requests.get(origin_weather_url).json()
-    dest_weather_data = requests.get(dest_weather_url).json()
-    
-    # Extract relevant weather information for origin airport
-    origin_precip = get_weather_value(origin_weather_data['properties']['quantitativePrecipitation'], selected_date, departure_time)
-    origin_wind_speed = get_weather_value(origin_weather_data['properties']['windSpeed'], selected_date, departure_time)
-    origin_snowfall = get_weather_value(origin_weather_data['properties']['snowfallAmount'], selected_date, departure_time)
-
-    # Extract relevant weather information for destination airport
-    dest_precip = get_weather_value(dest_weather_data['properties']['quantitativePrecipitation'], selected_date, departure_time)
-    dest_wind_speed = get_weather_value(dest_weather_data['properties']['windSpeed'], selected_date, departure_time)
-    dest_snowfall = get_weather_value(dest_weather_data['properties']['snowfallAmount'], selected_date, departure_time)
-
-    airline_columns = [f"Airline_{code}" for code in airline_mapping.values()]
-    origin_codes = sorted(merged_data['Origin Airport Code'].unique())
-    dest_codes = sorted(merged_data['Dest Airport Code'].unique())
-
-    # Create lists of column names in the desired order
-    origin_columns = [f"Origin_{code}" for code in origin_codes]
-    dest_columns = [f"Dest_{code}" for code in dest_codes]
-    month_columns = [f"Month_{i}" for i in range(1, 13)]
-    day_of_week_columns = [f"DayOfWeek_{i}" for i in range(1, 8)]
-    hour_columns = [f"Hour_{i}" for i in range(24)]
-
-    # Create a dictionary to store the data
-    data = {
-        'Fly Distance': [fly_distance],
-        'AWND': [origin_wind_speed],
-        'PRCP': [origin_precip],
-        'SNOW': [origin_snowfall],
-        'AWND_des': [dest_wind_speed],
-        'PRCP_des': [dest_precip],
-        'SNOW_des': [dest_snowfall]
-    }
-    for column in ['AWND', 'PRCP', 'SNOW', 'AWND_des', 'PRCP_des', 'SNOW_des']:
-        data[column] = [0 if x is None else x for x in data[column]]
-
-    # Add airline columns
-    data.update({col: [1 if airline_code == col.split("_")[1] else 0] for col in airline_columns})
-
-    # Add origin airport columns
-    data.update({col: [1 if origin == col.split("_")[1] else 0] for col in origin_columns})
-
-    # Add destination airport columns
-    data.update({col: [1 if destination == col.split("_")[1] else 0] for col in dest_columns})
-
-    # Add month columns
-    data.update({col: [1 if month == pd.to_datetime(col, format='Month_%m').strftime('%B') else 0] for col in month_columns})
-
-    # Create a dictionary to map day of the week column names to their corresponding day names
-    day_of_week_mapping = {
-        'DayOfWeek_1': 'Monday',
-        'DayOfWeek_2': 'Tuesday',
-        'DayOfWeek_3': 'Wednesday',
-        'DayOfWeek_4': 'Thursday',
-        'DayOfWeek_5': 'Friday',
-        'DayOfWeek_6': 'Saturday',
-        'DayOfWeek_7': 'Sunday'
-    }
-
-    # Add day of week columns
-    data.update({col: [1 if day_of_week == day_of_week_mapping[col] else 0] for col in day_of_week_columns})
-
-    # Add hour columns
-    data.update({col: [1 if departure_time == f"{int(col.split('_')[1]):02d}:00" else 0] for col in hour_columns})
-
-    # Create a DataFrame from the dictionary
-    df = pd.DataFrame(data)
-    df = df.drop(columns=['Hour_3'])
-    #drop it since no plane will dep at this time
-    with open('xgb_classifier.pkl', 'rb') as file:
-        xgb_classifier = pickle.load(file)
-        
+if not selected_route.empty:   
 
     if st.button("Predict"):
+        origin_lat = round(selected_route['Origin Latitude'].values[0], 2)
+        origin_lon = round(selected_route['Origin Longitude'].values[0], 2)
+        dest_lat = round(selected_route['Dest Latitude'].values[0], 2)
+        dest_lon = round(selected_route['Dest Longitude'].values[0], 2)
+        fly_distance = int(selected_route['Fly Distance'].values[0])
+        
+        origin_grid_url = f"https://api.weather.gov/points/{origin_lat},{origin_lon}"
+        dest_grid_url = f"https://api.weather.gov/points/{dest_lat},{dest_lon}"
+        try:
+            origin_grid_data = requests.get(origin_grid_url).json()
+            dest_grid_data = requests.get(dest_grid_url).json()
+
+        except requests.exceptions.RequestException as e:
+            st.error("An unexpected error occurred. The API may be busy or currently unavailable.")
+        
+        try:
+            origin_grid_x = origin_grid_data['properties']['gridX']
+            origin_grid_y = origin_grid_data['properties']['gridY']
+            dest_grid_x = dest_grid_data['properties']['gridX']
+            dest_grid_y = dest_grid_data['properties']['gridY']
+
+        except (KeyError, TypeError) as e:
+            st.error("The Local Weather Station is in Error :( ")
+            
+        
+        origin_weather_url = f"https://api.weather.gov/gridpoints/{origin_grid_data['properties']['gridId']}/{origin_grid_x},{origin_grid_y}"
+        dest_weather_url = f"https://api.weather.gov/gridpoints/{dest_grid_data['properties']['gridId']}/{dest_grid_x},{dest_grid_y}"
+        
+        try:
+            origin_weather_data = requests.get(origin_weather_url).json()
+            dest_weather_data = requests.get(dest_weather_url).json()
+        
+        except requests.exceptions.RequestException as e:
+            st.error("An unexpected error occurred. The API may be busy or currently unavailable.")
+        
+        # Extract relevant weather information for origin airport
+        origin_precip = get_weather_value(origin_weather_data['properties']['quantitativePrecipitation'], selected_date, departure_time)
+        origin_wind_speed = get_weather_value(origin_weather_data['properties']['windSpeed'], selected_date, departure_time)
+        origin_snowfall = get_weather_value(origin_weather_data['properties']['snowfallAmount'], selected_date, departure_time)
+
+        # Extract relevant weather information for destination airport
+        dest_precip = get_weather_value(dest_weather_data['properties']['quantitativePrecipitation'], selected_date, departure_time)
+        dest_wind_speed = get_weather_value(dest_weather_data['properties']['windSpeed'], selected_date, departure_time)
+        dest_snowfall = get_weather_value(dest_weather_data['properties']['snowfallAmount'], selected_date, departure_time)
+
+        airline_columns = [f"Airline_{code}" for code in airline_mapping.values()]
+        origin_codes = sorted(merged_data['Origin Airport Code'].unique())
+        dest_codes = sorted(merged_data['Dest Airport Code'].unique())
+
+        # Create lists of column names in the desired order
+        origin_columns = [f"Origin_{code}" for code in origin_codes]
+        dest_columns = [f"Dest_{code}" for code in dest_codes]
+        month_columns = [f"Month_{i}" for i in range(1, 13)]
+        day_of_week_columns = [f"DayOfWeek_{i}" for i in range(1, 8)]
+        hour_columns = [f"Hour_{i}" for i in range(24)]
+
+        # Create a dictionary to store the data
+        data = {
+            'Fly Distance': [fly_distance],
+            'AWND': [origin_wind_speed],
+            'PRCP': [origin_precip],
+            'SNOW': [origin_snowfall],
+            'AWND_des': [dest_wind_speed],
+            'PRCP_des': [dest_precip],
+            'SNOW_des': [dest_snowfall]
+        }
+        for column in ['AWND', 'PRCP', 'SNOW', 'AWND_des', 'PRCP_des', 'SNOW_des']:
+            data[column] = [0 if x is None else x for x in data[column]]
+
+        # Add airline columns
+        data.update({col: [1 if airline_code == col.split("_")[1] else 0] for col in airline_columns})
+
+        # Add origin airport columns
+        data.update({col: [1 if origin == col.split("_")[1] else 0] for col in origin_columns})
+
+        # Add destination airport columns
+        data.update({col: [1 if destination == col.split("_")[1] else 0] for col in dest_columns})
+
+        # Add month columns
+        data.update({col: [1 if month == pd.to_datetime(col, format='Month_%m').strftime('%B') else 0] for col in month_columns})
+
+        # Create a dictionary to map day of the week column names to their corresponding day names
+        day_of_week_mapping = {
+            'DayOfWeek_1': 'Monday',
+            'DayOfWeek_2': 'Tuesday',
+            'DayOfWeek_3': 'Wednesday',
+            'DayOfWeek_4': 'Thursday',
+            'DayOfWeek_5': 'Friday',
+            'DayOfWeek_6': 'Saturday',
+            'DayOfWeek_7': 'Sunday'
+        }
+
+        # Add day of week columns
+        data.update({col: [1 if day_of_week == day_of_week_mapping[col] else 0] for col in day_of_week_columns})
+
+        # Add hour columns
+        data.update({col: [1 if departure_time == f"{int(col.split('_')[1]):02d}:00" else 0] for col in hour_columns})
+
+        # Create a DataFrame from the dictionary
+        df = pd.DataFrame(data)
+        df = df.drop(columns=['Hour_3'])
+        #drop it since no plane will dep at this time
+
+        with open('xgb_classifier.pkl', 'rb') as file:
+            xgb_classifier = pickle.load(file)
+
         delay_probability = xgb_classifier.predict_proba(df)[:, 1][0]
+
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
 
         if delay_probability >= 0.5:
@@ -183,7 +196,8 @@ if not selected_route.empty:
                     ('Destination Snowfall', dest_snowfall)
                 ]
                 weather_df = pd.DataFrame(weather_data, columns=['Condition', 'Value'])
-                st.write(weather_df)
+                st.write("delayyy hahahha")
+                st.dataframe(weather_df)
         else:
             st.write("Your flight is not likely to be delayed.")
 
