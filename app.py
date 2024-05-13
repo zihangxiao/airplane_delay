@@ -164,7 +164,7 @@ if not selected_route.empty:
     with open('xgb_classifier.pkl', 'rb') as file:
         xgb_classifier = pickle.load(file)
         
-    
+
     if st.button("Predict"):
         delay_probability = xgb_classifier.predict_proba(df)[:, 1][0]
         st.write(f"The probability of flight delay is: {delay_probability:.2%}")
@@ -173,7 +173,6 @@ if not selected_route.empty:
             st.write("Your flight is likely to be delayed.")
             if st.button("View Reasons"):
                 st.write("Reasons:")
-
                 weather_data = [
                     ('Fly Distance', fly_distance),
                     ('Origin Wind Speed', origin_wind_speed),
@@ -183,11 +182,11 @@ if not selected_route.empty:
                     ('Destination Precipitation', dest_precip),
                     ('Destination Snowfall', dest_snowfall)
                 ]
-                # Display the weather data in a table
                 weather_df = pd.DataFrame(weather_data, columns=['Condition', 'Value'])
                 st.write(weather_df)
         else:
             st.write("Your flight is not likely to be delayed.")
+
 
 else:
     st.write("This Route Doesn't Exist. Please Enter Again :(")
