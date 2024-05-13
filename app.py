@@ -11,11 +11,6 @@ st.set_page_config(page_title="Flight Delay Prediction")
 # Page header
 st.header("Flight Delay Prediction")
 
-st.markdown("Maximum 7 Days before your Flight")
-
-# Input section
-st.subheader("Enter Flight Details")
-
 # Airline selection
 airline_mapping = {
     "American Airlines": "AA",
